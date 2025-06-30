@@ -46,20 +46,10 @@ namespace StorageApi.Controllers
 		[HttpPut("{id}")]
 		public async Task<IActionResult> PutProduct(int id, UpdateProductDto updateProductDto)
 		{
-			if (id != updateProductDto.Id)
-			{
-				return BadRequest();
-			}
+			if (id != updateProductDto.Id) return BadRequest();
 
-			Product product = new Product
-			{
-				Id = updateProductDto.Id,
-				Name = updateProductDto.Name,
-				Price = updateProductDto.Price,
-				Count = updateProductDto.Count,
-				Description = updateProductDto.Description
-			};
-
+			Product product = _mapper.Map<Product>(updateProductDto);
+	
 			_context.Entry(product).State = EntityState.Modified;
 
 			try
@@ -88,18 +78,13 @@ namespace StorageApi.Controllers
 		{
 			if (createProductDto is null) return NotFound("Product data is null.");
 
-			Product product = new Product
-			{
-				Id = createProductDto.Id,
-				Name = createProductDto.Name,
-				Price = createProductDto.Price,
-				Count = createProductDto.Count,
-				Description = createProductDto.Description
-			};
-
+			Product product = _mapper.Map<Product>(createProductDto);
+			
 			_context.Product.Add(product);
 
 			await _context.SaveChangesAsync();
+
+			createProductDto = _mapper.Map<CreateProductDto>(product);
 
 			return CreatedAtAction("GetProduct", new { id = product.Id }, createProductDto);
 		}
@@ -122,26 +107,18 @@ namespace StorageApi.Controllers
 
 		// GET: api/products/stats
 		[HttpGet("stats")]
-		public async Task<ActionResult<ProductDto>> GetProductStats()
+		public async Task<ActionResult<ProductStatsDto>> GetProductStats()
 		{
 			IEnumerable<ProductDto> productDto = await _context.Product
-				.Select(p => new ProductDto
-				{
-					Id = p.Id,
-					Name = p.Name,
-					Price = p.Price,
-					Count = p.Count,
-					Description = p.Description
-
-				}).ToListAsync();
-
+				.Select(p => _mapper.Map<ProductDto>(p))
+				.ToListAsync();
 
 			int totalProducts = productDto.Sum(p => p.Count);
 			int totalInventoryValue = productDto.Sum(p => p.InventoryValue);
 			double averagePrice = productDto.Any() ? productDto.Average(p => p.Price) : 0;
 
 			// The return will be a Json object 
-			return Ok(
+			return Ok( 
 				new ProductStatsDto(
 					totalProducts,
 					totalInventoryValue,
