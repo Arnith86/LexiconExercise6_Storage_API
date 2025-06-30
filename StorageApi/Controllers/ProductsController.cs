@@ -23,7 +23,7 @@ namespace StorageApi.Controllers
 
 		// GET: api/Products
 		[HttpGet]
-		public async Task<ActionResult<IEnumerable<ProductDto>>> GetProduct()
+		public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
 		{
 			var product = await _context.Product.ToListAsync();
 
@@ -49,7 +49,7 @@ namespace StorageApi.Controllers
 			if (id != updateProductDto.Id) return BadRequest();
 
 			Product product = _mapper.Map<Product>(updateProductDto);
-	
+
 			_context.Entry(product).State = EntityState.Modified;
 
 			try
@@ -79,7 +79,7 @@ namespace StorageApi.Controllers
 			if (createProductDto is null) return NotFound("Product data is null.");
 
 			Product product = _mapper.Map<Product>(createProductDto);
-			
+
 			_context.Product.Add(product);
 
 			await _context.SaveChangesAsync();
@@ -94,10 +94,8 @@ namespace StorageApi.Controllers
 		public async Task<IActionResult> DeleteProduct(int id)
 		{
 			var product = await _context.Product.FindAsync(id);
-			if (product == null)
-			{
-				return NotFound();
-			}
+
+			if (product is null) return NotFound();
 
 			_context.Product.Remove(product);
 			await _context.SaveChangesAsync();
@@ -118,13 +116,31 @@ namespace StorageApi.Controllers
 			double averagePrice = productDto.Any() ? productDto.Average(p => p.Price) : 0;
 
 			// The return will be a Json object 
-			return Ok( 
+			return Ok(
 				new ProductStatsDto(
 					totalProducts,
 					totalInventoryValue,
 					averagePrice
 				)
 			);
+		}
+
+
+		// GET: api/products/bycategory/?category="CategoryName"
+		[HttpGet("bycategory")]
+		public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductByCategory([FromQuery] string? category)
+		{
+			IQueryable<Product> productQuery = _context.Product;
+
+			if (!string.IsNullOrEmpty(category))
+			{
+				productQuery = productQuery.Where(p => p.Category == category);
+			}
+			else return BadRequest("Category cannot be null or empty.");
+
+			var products = await productQuery.ToListAsync();
+
+			return Ok(_mapper.Map<IEnumerable<ProductDto>>(products));
 		}
 
 
