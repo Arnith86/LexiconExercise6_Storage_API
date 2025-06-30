@@ -44,7 +44,7 @@ namespace StorageApi.Controllers
 		// PUT: api/Products/5  // Update
 		// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 		[HttpPut("{id}")]
-		public async Task<IActionResult> PutProduct(int id, UpdateProductDto updateProductDto)
+		public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto updateProductDto)
 		{
 			if (id != updateProductDto.Id) return BadRequest();
 
@@ -74,7 +74,7 @@ namespace StorageApi.Controllers
 		// POST: api/Products   // Create
 		// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 		[HttpPost]
-		public async Task<ActionResult<CreateProductDto>> PostProduct(CreateProductDto createProductDto)
+		public async Task<ActionResult<CreateProductDto>> CreateProduct(CreateProductDto createProductDto)
 		{
 			if (createProductDto is null) return NotFound("Product data is null.");
 
